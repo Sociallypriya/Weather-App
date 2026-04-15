@@ -3,12 +3,15 @@ import SearchBox from "./SearchBox"
 import InfoBox from "./InfoBox"
 import WeatherChart from "./WeatherChart"
 import WeatherForecast from "./WeatherForecast"
-import { useState, useEffect } from "react"
-import { Box, Container, Typography, Chip, IconButton, Tooltip, Snackbar, Alert, Paper } from '@mui/material'
-import { Favorite, FavoriteBorder, Refresh, Settings, NavigateNext, NavigateBefore } from '@mui/icons-material'
+import { useState, useEffect, useCallback } from "react"
+import { Box, Container, Typography, IconButton, Tooltip, Snackbar, Alert, Paper } from '@mui/material'
+import { NavigateNext, NavigateBefore } from '@mui/icons-material'
 import UnitToggle from "./UnitToggle"
 
 export default function WeatherApp(){
+    const API_URL = "https://api.openweathermap.org/data/2.5/weather";
+    const API_KEY = "531f7f201f3003f22315f9d6b07ebb7e";
+
     const [weatherInfo,setWeatherInfo]=useState({
         city: "Wanderland",
         feelsLike: 24.84,
@@ -21,7 +24,6 @@ export default function WeatherApp(){
     
     const [loading, setLoading] = useState(false);
     const [unit, setUnit] = useState('celsius');
-    const [favorites, setFavorites] = useState([]);
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
     const [alertType, setAlertType] = useState('info');
@@ -33,19 +35,49 @@ export default function WeatherApp(){
         { id: 'chart', title: 'Weather Analytics', component: 'chart' },
         { id: 'forecast', title: '5-Day Forecast', component: 'forecast' }
     ];
+    const slideCount = slides.length;
 
-    // Load favorites from localStorage on component mount
-    useEffect(() => {
-        const savedFavorites = localStorage.getItem('weatherFavorites');
-        if (savedFavorites) {
-            setFavorites(JSON.parse(savedFavorites));
+    const nextSlide = useCallback(() => {
+        setCurrentSlide((prev) => (prev + 1) % slideCount);
+    }, [slideCount]);
+
+    const prevSlide = useCallback(() => {
+        setCurrentSlide((prev) => (prev - 1 + slideCount) % slideCount);
+    }, [slideCount]);
+
+    const showStatus = (message, type = 'info') => {
+        setAlertMessage(message);
+        setAlertType(type);
+        setShowAlert(true);
+    };
+
+    const getWeatherInfo = async (cityName) => {
+        const trimmedCity = cityName.trim();
+        const response = await fetch(
+            `${API_URL}?q=${trimmedCity}&appid=${API_KEY}&units=metric`
+        );
+
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error("City not found. Please check the spelling.");
+            }
+            if (response.status === 401) {
+                throw new Error("API key error. Please contact support.");
+            }
+            throw new Error("Failed to fetch weather data. Please try again.");
         }
-    }, []);
 
-    // Save favorites to localStorage whenever they change
-    useEffect(() => {
-        localStorage.setItem('weatherFavorites', JSON.stringify(favorites));
-    }, [favorites]);
+        const jsonResponse = await response.json();
+        return {
+            city: jsonResponse.name || trimmedCity,
+            temp: jsonResponse.main.temp,
+            tempMin: jsonResponse.main.temp_min,
+            tempMax: jsonResponse.main.temp_max,
+            humidity: jsonResponse.main.humidity,
+            feelsLike: jsonResponse.main.feels_like,
+            weather: jsonResponse.weather[0].description,
+        };
+    };
 
     // Keyboard navigation
     useEffect(() => {
@@ -59,7 +91,7 @@ export default function WeatherApp(){
 
         window.addEventListener('keydown', handleKeyPress);
         return () => window.removeEventListener('keydown', handleKeyPress);
-    }, []);
+    }, [nextSlide, prevSlide]);
 
     let updateInfo = async (newInfo) => {
         setLoading(true);
@@ -67,53 +99,30 @@ export default function WeatherApp(){
             // Simulate API delay for better UX
             await new Promise(resolve => setTimeout(resolve, 1000));
             setWeatherInfo(newInfo);
-            setShowAlert(true);
-            setAlertMessage(`Weather updated for ${newInfo.city}!`);
-            setAlertType('success');
-        } catch (error) {
-            setShowAlert(true);
-            setAlertMessage('Failed to update weather information');
-            setAlertType('error');
+            showStatus(`Weather updated for ${newInfo.city}!`, 'success');
+        } catch {
+            showStatus('Failed to update weather information', 'error');
         } finally {
             setLoading(false);
         }
     };
 
-    const toggleFavorite = () => {
-        const cityName = weatherInfo.city;
-        if (favorites.includes(cityName)) {
-            setFavorites(favorites.filter(city => city !== cityName));
-            setShowAlert(true);
-            setAlertMessage(`${cityName} removed from favorites`);
-            setAlertType('info');
-        } else {
-            setFavorites([...favorites, cityName]);
-            setShowAlert(true);
-            setAlertMessage(`${cityName} added to favorites`);
-            setAlertType('success');
+    const refreshWeather = async () => {
+        setLoading(true);
+        try {
+            const newInfo = await getWeatherInfo(weatherInfo.city);
+            setWeatherInfo(newInfo);
+            showStatus(`Weather refreshed for ${newInfo.city}!`, 'success');
+        } catch (error) {
+            showStatus(error.message || 'Failed to refresh weather', 'error');
+        } finally {
+            setLoading(false);
         }
-    };
-
-    const loadFavoriteCity = async (cityName) => {
-        // This would typically call the weather API for the favorite city
-        setShowAlert(true);
-        setAlertMessage(`Loading weather for ${cityName}...`);
-        setAlertType('info');
     };
 
     const handleCloseAlert = () => {
         setShowAlert(false);
     };
-
-    const nextSlide = () => {
-        setCurrentSlide((prev) => (prev + 1) % slides.length);
-    };
-
-    const prevSlide = () => {
-        setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-    };
-
-    const isFavorite = favorites.includes(weatherInfo.city);
 
     const renderCurrentSlide = () => {
         switch (currentSlide) {
@@ -130,46 +139,13 @@ export default function WeatherApp(){
                     }}>
                         <SearchBox updateInfo={updateInfo} loading={loading} />
                         
-                        <Box sx={{ position: 'relative', width: '100%' }}>
+                        <Box sx={{ width: '100%' }}>
                             <InfoBox 
                                 info={weatherInfo} 
                                 unit={unit}
                                 loading={loading}
+                                onRefresh={refreshWeather}
                             />
-                            
-                            {/* Interactive Controls Overlay */}
-                            <Box sx={{ 
-                                position: 'absolute', 
-                                top: 16, 
-                                right: 16, 
-                                display: 'flex', 
-                                gap: 1 
-                            }}>
-                                <Tooltip title={isFavorite ? "Remove from favorites" : "Add to favorites"}>
-                                    <IconButton 
-                                        onClick={toggleFavorite}
-                                        sx={{ 
-                                            backgroundColor: 'rgba(255,255,255,0.9)',
-                                            '&:hover': { backgroundColor: 'rgba(255,255,255,1)' }
-                                        }}
-                                    >
-                                        {isFavorite ? <Favorite color="error" /> : <FavoriteBorder />}
-                                    </IconButton>
-                                </Tooltip>
-                                
-                                <Tooltip title="Refresh weather">
-                                    <IconButton 
-                                        onClick={() => updateInfo(weatherInfo)}
-                                        disabled={loading}
-                                        sx={{ 
-                                            backgroundColor: 'rgba(255,255,255,0.9)',
-                                            '&:hover': { backgroundColor: 'rgba(255,255,255,1)' }
-                                        }}
-                                    >
-                                        <Refresh />
-                                    </IconButton>
-                                </Tooltip>
-                            </Box>
                         </Box>
                     </Box>
                 );
@@ -199,22 +175,6 @@ export default function WeatherApp(){
                 {/* Unit Toggle */}
                 <UnitToggle unit={unit} setUnit={setUnit} />
                 
-                {/* Favorites Display */}
-                {favorites.length > 0 && (
-                    <Box sx={{ mt: 3, display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center' }}>
-                        <Typography variant="body2" sx={{ width: '100%', mb: 1, color: 'text.secondary' }}>
-                            Favorite Cities:
-                        </Typography>
-                        {favorites.map((city) => (
-                            <Chip
-                                key={city}
-                                label={city}
-                                onClick={() => loadFavoriteCity(city)}
-                                sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'primary.light' } }}
-                            />
-                        ))}
-                    </Box>
-                )}
             </Box>
 
             {/* Navigation Dots */}
@@ -263,7 +223,7 @@ export default function WeatherApp(){
             >
 
                 {/* Navigation Arrows */}
-                <Tooltip title="Previous (←)">
+                <Tooltip title="Previous (Left arrow)">
                     <IconButton
                         onClick={prevSlide}
                         sx={{
@@ -280,7 +240,7 @@ export default function WeatherApp(){
                     </IconButton>
                 </Tooltip>
 
-                <Tooltip title="Next (→)">
+                <Tooltip title="Next (Right arrow)">
                     <IconButton
                         onClick={nextSlide}
                         sx={{
@@ -299,7 +259,7 @@ export default function WeatherApp(){
 
                 {/* Slide Content */}
                 <Box sx={{ 
-                    px: 4,
+                    px: { xs: 0, sm: 4 },
                     display: 'flex',
                     justifyContent: 'center',
                     width: '100%'

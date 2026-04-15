@@ -36,10 +36,10 @@ export default function UnitToggle({ unit, setUnit }) {
                 }}
             >
                 <ToggleButton value="celsius" aria-label="celsius">
-                    °C
+                    {"\u00b0"}C
                 </ToggleButton>
                 <ToggleButton value="fahrenheit" aria-label="fahrenheit">
-                    °F
+                    {"\u00b0"}F
                 </ToggleButton>
             </ToggleButtonGroup>
         </Box>

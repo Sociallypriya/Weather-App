@@ -2,7 +2,7 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 import Typography from '@mui/material/Typography';
-import { Box, Skeleton, LinearProgress, Collapse, IconButton, Paper, Grid } from '@mui/material';
+import { Box, Skeleton, LinearProgress, Collapse, IconButton, Paper, Grid, Tooltip } from '@mui/material';
 import { 
     AcUnit, 
     WbSunny, 
@@ -10,12 +10,14 @@ import {
     Opacity, 
     Thermostat,
     ExpandMore,
-    ExpandLess
+    ExpandLess,
+    Refresh
 } from '@mui/icons-material';
 import { useState } from 'react';
 
-export default function InfoBox({info, unit, loading}){
+export default function InfoBox({info, unit, loading, onRefresh}){
     const [expanded, setExpanded] = useState(false);
+    const degreeSymbol = "\u00b0";
     
     const INIT_URL ="https://media.istockphoto.com/id/140469297/photo/sandstorm-driving.webp?a=1&b=1&s=612x612&w=0&k=20&c=-WrjjAF7jLNTOBqWHKKVHGxAL9_AqTCTfeMoGMAkO2c=";
     const RAIN_URL ="https://media.istockphoto.com/id/498063665/photo/rainy-landscape.webp?a=1&b=1&s=612x612&w=0&k=20&c=hOE6L7f7OoSKUW1Q4tR27GoEkOU_ywKJGCvSO77SeZg=";
@@ -120,6 +122,33 @@ export default function InfoBox({info, unit, loading}){
                         }}>
                             {getWeatherIcon()}
                         </Box>
+
+                        {onRefresh && (
+                            <Tooltip title="Refresh weather">
+                                <span>
+                                    <IconButton
+                                        onClick={onRefresh}
+                                        disabled={loading}
+                                        sx={{
+                                            position: 'absolute',
+                                            top: 10,
+                                            right: 10,
+                                            width: 44,
+                                            height: 44,
+                                            backgroundColor: 'rgba(255,255,255,0.95)',
+                                            border: 1,
+                                            borderColor: 'grey.300',
+                                            boxShadow: 2,
+                                            '&:hover': {
+                                                backgroundColor: 'white',
+                                            }
+                                        }}
+                                    >
+                                        <Refresh />
+                                    </IconButton>
+                                </span>
+                            </Tooltip>
+                        )}
                     </CardMedia>
                     
                     <CardContent>
@@ -144,10 +173,10 @@ export default function InfoBox({info, unit, loading}){
                                 WebkitBackgroundClip: 'text',
                                 WebkitTextFillColor: 'transparent'
                             }}>
-                                {convertTemp(info.temp)}°{unit === 'fahrenheit' ? 'F' : 'C'}
+                                {convertTemp(info.temp)}{degreeSymbol}{unit === 'fahrenheit' ? 'F' : 'C'}
                             </Typography>
                             <Typography variant="h6" color="text.secondary">
-                                {getWeatherMood()} • {info.weather}
+                                {getWeatherMood()} - {info.weather}
                             </Typography>
                         </Box>
 
@@ -166,7 +195,7 @@ export default function InfoBox({info, unit, loading}){
                                     <Typography variant="body2">Feels like</Typography>
                                 </Box>
                                 <Typography variant="body1" fontWeight="bold">
-                                    {convertTemp(info.feelsLike)}°{unit === 'fahrenheit' ? 'F' : 'C'}
+                                    {convertTemp(info.feelsLike)}{degreeSymbol}{unit === 'fahrenheit' ? 'F' : 'C'}
                                 </Typography>
                             </Box>
                             
@@ -190,7 +219,7 @@ export default function InfoBox({info, unit, loading}){
                                 <Grid item xs={6}>
                                     <Card sx={{ p: 2, backgroundColor: 'grey.50', textAlign: 'center' }}>
                                         <Typography variant="h6" color="primary">
-                                            {convertTemp(info.tempMin)}°{unit === 'fahrenheit' ? 'F' : 'C'}
+                                            {convertTemp(info.tempMin)}{degreeSymbol}{unit === 'fahrenheit' ? 'F' : 'C'}
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary">
                                             Min Temperature
@@ -200,7 +229,7 @@ export default function InfoBox({info, unit, loading}){
                                 <Grid item xs={6}>
                                     <Card sx={{ p: 2, backgroundColor: 'grey.50', textAlign: 'center' }}>
                                         <Typography variant="h6" color="secondary">
-                                            {convertTemp(info.tempMax)}°{unit === 'fahrenheit' ? 'F' : 'C'}
+                                            {convertTemp(info.tempMax)}{degreeSymbol}{unit === 'fahrenheit' ? 'F' : 'C'}
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary">
                                             Max Temperature
@@ -241,7 +270,7 @@ export default function InfoBox({info, unit, loading}){
 
                                 {/* Weather Description */}
                                 <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                    The weather can be described as <strong>{info.weather}</strong> and feels like {convertTemp(info.feelsLike)}°{unit === 'fahrenheit' ? 'F' : 'C'}.
+                                    The weather can be described as <strong>{info.weather}</strong> and feels like {convertTemp(info.feelsLike)}{degreeSymbol}{unit === 'fahrenheit' ? 'F' : 'C'}.
                                 </Typography>
                             </Box>
                         </Collapse>

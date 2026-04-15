@@ -205,7 +205,7 @@ export default function WeatherChart({ weatherData }) {
                             }
                         }}>
                             <Typography variant="h5" color="primary" sx={{ fontWeight: 'bold' }}>
-                                {Math.round(chartData.reduce((sum, item) => sum + item.temperature, 0) / chartData.length)}°
+                                {Math.round(chartData.reduce((sum, item) => sum + item.temperature, 0) / chartData.length)}{"\u00b0"}
                             </Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'medium' }}>
                                 Average Temperature
@@ -223,7 +223,7 @@ export default function WeatherChart({ weatherData }) {
                             }
                         }}>
                             <Typography variant="h5" color="secondary" sx={{ fontWeight: 'bold' }}>
-                                {Math.max(...chartData.map(item => item.temperature))}°
+                                {Math.max(...chartData.map(item => item.temperature))}{"\u00b0"}
                             </Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'medium' }}>
                                 Maximum Temperature
@@ -241,7 +241,7 @@ export default function WeatherChart({ weatherData }) {
                             }
                         }}>
                             <Typography variant="h5" color="info.main" sx={{ fontWeight: 'bold' }}>
-                                {Math.min(...chartData.map(item => item.temperature))}°
+                                {Math.min(...chartData.map(item => item.temperature))}{"\u00b0"}
                             </Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'medium' }}>
                                 Minimum Temperature

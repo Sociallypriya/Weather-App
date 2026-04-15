@@ -1,14 +1,13 @@
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import { useState, useEffect } from 'react';
-import { Box, Autocomplete, CircularProgress, Alert, Paper, Typography, Chip, Card, Grid } from '@mui/material';
+import { Box, Autocomplete, CircularProgress, Paper, Typography, Chip, Card, Grid } from '@mui/material';
 import { Search, LocationOn, TrendingUp } from '@mui/icons-material';
 
 export default function SearchBox({updateInfo, loading}){
     let [city, setCity] = useState("");
     let [error,setError] = useState(false);
     let [errorMessage, setErrorMessage] = useState("");
-    let [suggestions, setSuggestions] = useState([]);
     let [recentSearches, setRecentSearches] = useState([]);
     const API_URL = "https://api.openweathermap.org/data/2.5/weather";
     const API_KEY = "531f7f201f3003f22315f9d6b07ebb7e";
@@ -33,39 +32,35 @@ export default function SearchBox({updateInfo, loading}){
     ];
 
     let getWeatherInfo = async(cityName) => {
-        try{
-            let response = await fetch(
-                `${API_URL}?q=${cityName}&appid=${API_KEY}&units=metric`
-            );
-            
-            if (!response.ok) {
-                if (response.status === 404) {
-                    throw new Error("City not found. Please check the spelling.");
-                } else if (response.status === 401) {
-                    throw new Error("API key error. Please contact support.");
-                } else {
-                    throw new Error("Failed to fetch weather data. Please try again.");
-                }
+        let response = await fetch(
+            `${API_URL}?q=${cityName}&appid=${API_KEY}&units=metric`
+        );
+        
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error("City not found. Please check the spelling.");
+            } else if (response.status === 401) {
+                throw new Error("API key error. Please contact support.");
+            } else {
+                throw new Error("Failed to fetch weather data. Please try again.");
             }
-            
-            let jsonResponse = await response.json();
-            let result = {
-                city: cityName,
-                temp: jsonResponse.main.temp,
-                tempMin: jsonResponse.main.temp_min,
-                tempMax: jsonResponse.main.temp_max,
-                humidity: jsonResponse.main.humidity,
-                feelsLike: jsonResponse.main.feels_like,
-                weather: jsonResponse.weather[0].description,
-            };
-            
-            // Add to recent searches
-            addToRecentSearches(cityName);
-            
-            return result;
-        }catch(err){
-            throw err; 
         }
+        
+        let jsonResponse = await response.json();
+        let result = {
+            city: cityName,
+            temp: jsonResponse.main.temp,
+            tempMin: jsonResponse.main.temp_min,
+            tempMax: jsonResponse.main.temp_max,
+            humidity: jsonResponse.main.humidity,
+            feelsLike: jsonResponse.main.feels_like,
+            weather: jsonResponse.weather[0].description,
+        };
+        
+        // Add to recent searches
+        addToRecentSearches(cityName);
+        
+        return result;
     };
 
     const addToRecentSearches = (cityName) => {

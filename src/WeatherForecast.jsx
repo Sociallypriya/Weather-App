@@ -125,10 +125,10 @@ export default function WeatherForecast({ currentWeather }) {
                                 </Box>
                                 
                                 <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-                                    {day.high}°
+                                    {day.high}{"\u00b0"}
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    {day.low}°
+                                    {day.low}{"\u00b0"}
                                 </Typography>
                                 
                                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
@@ -165,7 +165,7 @@ export default function WeatherForecast({ currentWeather }) {
                             <Typography variant="body2">Temperature Range</Typography>
                         </Box>
                         <Typography variant="h6" color="primary">
-                            {forecastData[selectedDay].low}° - {forecastData[selectedDay].high}°
+                            {forecastData[selectedDay].low}{"\u00b0"} - {forecastData[selectedDay].high}{"\u00b0"}
                         </Typography>
                     </Grid>
                     
