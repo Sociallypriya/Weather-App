@@ -16,17 +16,21 @@ export default function WeatherForecast({ currentWeather }) {
 
     // Mock forecast data - in a real app, this would come from API
     const generateForecastData = () => {
-        const days = ['Today', 'Tomorrow', 'Wednesday', 'Thursday', 'Friday'];
         const forecast = [];
         
         for (let i = 0; i < 5; i++) {
+            const forecastDate = new Date(Date.now() + i * 24 * 60 * 60 * 1000);
             const baseTemp = currentWeather.temp + (Math.random() - 0.5) * 15;
             const weatherTypes = ['sunny', 'cloudy', 'rainy', 'partly cloudy', 'clear'];
             const weather = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
             
             forecast.push({
-                day: days[i],
-                date: new Date(Date.now() + i * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { 
+                day: i === 0
+                    ? 'Today'
+                    : i === 1
+                        ? 'Tomorrow'
+                        : forecastDate.toLocaleDateString('en-US', { weekday: 'long' }),
+                date: forecastDate.toLocaleDateString('en-US', { 
                     month: 'short', 
                     day: 'numeric' 
                 }),
