@@ -10,7 +10,7 @@ export default function SearchBox({updateInfo, loading}){
     let [errorMessage, setErrorMessage] = useState("");
     let [recentSearches, setRecentSearches] = useState([]);
     const API_URL = "https://api.openweathermap.org/data/2.5/weather";
-    const API_KEY = "531f7f201f3003f22315f9d6b07ebb7e";
+    const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
 
     // Load recent searches from localStorage
     useEffect(() => {
